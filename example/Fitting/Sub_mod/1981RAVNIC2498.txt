@@ -1,0 +1,21 @@
+Author(s):   Ravishankara, A.R.; Nicovich, J.M.; Thompson, R.L.; Tully, F.P.
+Title:   Kinetic Study of the Reaction of OH with H2 and D2 from 250 to 1050 K
+
+T (K)	k(T) [cm3/molecule s]
+250			1.75E-15
+300			6.39E-15
+350			1.71E-14
+400			3.75E-14
+450			7.13E-14
+500			1.23E-13
+550			1.95E-13
+600			2.93E-13
+650			4.20E-13
+700			5.79E-13
+750			7.74E-13
+800			1.01E-12
+850			1.28E-12
+900			1.60E-12
+950			1.97E-12
+1000		2.39E-12
+1050		2.86E-12

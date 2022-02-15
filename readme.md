@@ -1,1 +1,1 @@
-[![DOI](https://zenodo.org/badge/290038246.svg)](https://www.mdpi.com/1420-3049/24/19/3478)
+[![DOI](https://doi.org/10.3390/molecules24193478)](https://www.mdpi.com/1420-3049/24/19/3478)

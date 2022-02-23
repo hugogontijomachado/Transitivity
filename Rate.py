@@ -640,7 +640,7 @@ class ReactionProperties:
 
         self.reaction = reaction
         self.dictRateUnit = ({'uni':'1/s'},
-                             {'mol':'cm³/mol.s','molecule':'cm³/molecule.s'})[len(self.reaction.reac)-1]
+                             {'mol':'cm³/mol.s','molecule':'cm³/molecule.s'})[np.clip(len(self.reaction.reac)-1,0,1)]
 
         self.__variables()
 
@@ -924,7 +924,7 @@ class ReactionProperties:
     def __variables(self):
 
         self.rateUnitVar = StringVar()
-        self.rateUnitVar.set(('uni','mol')[len(self.reaction.reac)-1])
+        self.rateUnitVar.set(('uni','mol')[np.clip(len(self.reaction.reac)-1,0,1)])
 
         self.rateFormatVar = StringVar()
         self.rateFormatVar.set('k')

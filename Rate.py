@@ -23,7 +23,14 @@ class Rate:
         'Reac2': 'Reactant 2',
         'TS': 'Transition State',
         'Prod1': 'Product 1',
-        'Prod2': 'Product 2'
+        'Prod2': 'Product 2',
+
+        'vReac1': 'Reactant 1',
+        'vReac2': 'Reactant 2',
+        'vProd1': 'Product 1',
+        'vProd2': 'Product 2',
+        'pvert1': 'Vertical Product 1',
+        'pvert2': 'Vertical Product 2'
     }
     __speciesListBox = {}
     __speciesEnVar = {}
@@ -48,9 +55,13 @@ class Rate:
         self.__tabs.add(ctstTab, text="Conventional TST")
         self.__ctstTab(ctstTab)
 
-        vtstTab = ttk.Frame(parent)
-        self.__tabs.add(vtstTab, text="Variational TST")
-        self.__vtstTab(vtstTab)
+        #vtstTab = ttk.Frame(parent)
+        #self.__tabs.add(vtstTab, text="Variational TST")
+        #self.__vtstTab(vtstTab)
+
+        marcusTab = ttk.Frame(parent)
+        self.__tabs.add(marcusTab, text="Marcus Theory")
+        self.__marcusTab(marcusTab)
 
     def __configureTabs(self,parent):
         for rows in range(0,50):
@@ -59,6 +70,25 @@ class Rate:
             rows += 1
         self.__tabs = ttk.Notebook(parent)
         self.__tabs.pack(fill=BOTH, expand=TRUE, anchor=CENTER)
+
+    def __marcusTab(self,parent):
+        ##Title
+        title = Label(parent, text="Rate Constant", font=('arial', 27, 'bold'))
+        title.pack(pady=35,anchor=CENTER)
+        
+
+        ### Separator
+        sep = Frame(parent,height=3, bd=1, relief=SUNKEN)
+        sep.pack(fill=X, padx=11, pady=10,anchor=N)
+
+                ### Frame Species
+        frameSpecies = Frame(parent)
+        frameSpecies.pack(anchor = N, expand=TRUE, fill = BOTH)
+        self.__BuildframeSpecies(frameSpecies, 'marcus')
+
+        frameBtTemp = Frame(parent)
+        frameBtTemp.pack(expand=TRUE, fill=X,ipady=5)
+        self.__BuildframeBtTemp(frameBtTemp, 'marcus')
 
     def __ctstTab(self,parent):
 
@@ -84,10 +114,6 @@ class Rate:
         frameBtTemp = Frame(parent)
         frameBtTemp.pack(expand=TRUE, fill=X,ipady=5)
         self.__BuildframeBtTemp(frameBtTemp)
-
-        ### Separator
-        #sep = Frame(parent,height=3, bd=3, relief=GROOVE, bg='black')
-        #sep.pack(fill=X, padx=5, pady=15)
 
     def __vtstTab(self,parent):
 
@@ -127,11 +153,11 @@ class Rate:
         calcBt = Button(frameBR, text="Calculate", fg='blue', command=self.__Calculate, font=('Arial', 12, 'bold'),width=14, height=1, bd=5)
         calcBt.pack(side=LEFT, anchor = CENTER )#, pady=8)
 
-    def __BuildframeBtTemp(self,parent):
+    def __BuildframeBtTemp(self, parent, theory='ctst'):
         ## Frame Left
         frameL = Frame(parent)
         frameL.pack(side=LEFT,expand=TRUE,fill=BOTH)
-        self.__BuildframeTemp(frameL, 'ctst')
+        self.__BuildframeTemp(frameL, theory)
 
         ### Separator
         sep = Frame(parent,width=3, bd=1, relief=SUNKEN)
@@ -141,7 +167,7 @@ class Rate:
         frameC = Frame(parent)
         frameC.pack(side=LEFT,expand=TRUE, fill=BOTH)
 
-        calcBt = Button(frameC, text="Calculate", fg='blue', command=self.__Calculate,font=('Arial', 12, 'bold'), width=12, height=1, bd=5)
+        calcBt = Button(frameC, text="Calculate", fg='blue', command=lambda: self.__Calculate(theory),font=('Arial', 12, 'bold'), width=12, height=1, bd=5)
         calcBt.pack(side=TOP,expand=TRUE)
 
         btQuick = Button(frameC, text= "Quick Check on\nSpecies Properties",height= 2, width=18,relief=RAISED,command=self.__quick)
@@ -155,14 +181,18 @@ class Rate:
         frameR = Frame(parent)
         frameR.pack(side=LEFT,expand=TRUE, fill=BOTH)
 
-        self.__SpeciesPropBt = Button(frameR, fg='blue', text="Species Properties", height=1, width=18,relief=GROOVE, command=self.__SpeciesProperties, state=DISABLED)
-        self.__SpeciesPropBt.pack(expand=TRUE)
+        if theory == 'ctst':
+            self.__SpeciesPropBt = Button(frameR, fg='blue', text="Species Properties", height=1, width=18,relief=GROOVE, command=self.__SpeciesProperties, state=DISABLED)
+            self.__SpeciesPropBt.pack(expand=TRUE)
 
-        self.__ReacPropBt = Button(frameR, fg='blue', text="Reaction Properties", height=1, width=18,relief=GROOVE, command=self.__ReactionProperties, state=DISABLED)
-        self.__ReacPropBt.pack(expand=TRUE)
-
-        self.__SolvPropBt = Button(frameR, fg='blue', text="Solvent Effect", height=1, width=18, relief=GROOVE,command=self.__SolventProperties, state=DISABLED)
-        self.__SolvPropBt.pack(expand=TRUE)
+            self.__ReacPropBt = Button(frameR, fg='blue', text="Reaction Properties", height=1, width=18,relief=GROOVE, command=lambda x=theory: self.__ReactionProperties(theory), state=DISABLED)
+            self.__ReacPropBt.pack(expand=TRUE)
+        
+            self.__SolvPropBt = Button(frameR, fg='blue', text="Solvent Effect", height=1, width=18, relief=GROOVE,command=self.__SolventProperties, state=DISABLED)
+            self.__SolvPropBt.pack(expand=TRUE)
+        else:
+            self.__ReacPropBt_marcus = Button(frameR, fg='blue', text="Reaction Properties", height=1, width=18,relief=GROOVE, command=lambda x=theory: self.__ReactionProperties(theory), state=DISABLED)
+            self.__ReacPropBt_marcus.pack(expand=TRUE)
 
     def __BuildframeTemp(self,parent,theory):
 
@@ -174,38 +204,30 @@ class Rate:
         TempCb.select()
         TempCb.pack()
 
-    def __BuildframeSpecies(self,parent):
+    def __BuildframeSpecies(self,parent, theory='ctst'):
         ipadx = 5
         ipady = 0
         bd = 2
+        
+        if theory == 'ctst':
+            names = ['Reac1', 'Reac2', 'TS', 'Prod1', 'Prod2']
+        elif theory == 'marcus': names = ['vReac1', 'vReac2',  'vProd1', 'vProd2', 'pvert1', 'pvert2']
 
-        frameR1 = LabelFrame(parent, text = "Reactant 1", bd=bd, relief=GROOVE)
-        frameR1.pack(side=LEFT, expand=TRUE, anchor=CENTER, ipadx=ipadx, ipady=ipady)
-        self.__BuildlbframeSpecies(frameR1,'Reac1')
 
-        frameR2 = LabelFrame(parent,text = "Reactant 2", bd=bd, relief=GROOVE)
-        frameR2.pack(side=LEFT, expand=TRUE, anchor=CENTER, ipadx=ipadx, ipady=ipady)
-        self.__BuildlbframeSpecies(frameR2, 'Reac2')
-
-        frameTS = LabelFrame(parent, text = "Transition State", bd=bd, relief=GROOVE)
-        frameTS.pack(side=LEFT, expand=TRUE, anchor=CENTER, ipadx=ipadx, ipady=ipady)
-        self.__BuildlbframeSpecies(frameTS, 'TS')
-
-        frameP1 = LabelFrame(parent, text = "Product 1", bd=bd, relief=GROOVE)
-        frameP1.pack(side=LEFT, expand=TRUE, anchor=CENTER, ipadx=ipadx, ipady=ipady)
-        self.__BuildlbframeSpecies(frameP1, 'Prod1')
-
-        frameP2 = LabelFrame(parent,  text = "Product 2", bd=bd, relief=GROOVE)
-        frameP2.pack(side=LEFT, expand=TRUE, anchor=CENTER, ipadx=ipadx, ipady=ipady)
-        self.__BuildlbframeSpecies(frameP2, 'Prod2')
-
-    def __BuildlbframeSpecies(self,parent,species):
+        for n in range(len(names)):
+            frame = LabelFrame(parent, text = self.__species[names[n]], bd=bd, relief=GROOVE)
+            frame.pack(side=LEFT, expand=TRUE, anchor=CENTER, ipadx=ipadx, ipady=ipady)
+            self.__BuildlbframeSpecies(frame,names[n],theory)
+        
+    def __BuildlbframeSpecies(self,parent,species,theory='ctst'):
         species_bt = Button(parent, text ="Open File", command=lambda species = species: self.__Open(species), bd=3, relief=RAISED)
         species_bt.pack(side= TOP, pady = 5)
 
         self.__speciesListBox[species] = Listbox(parent, height=1, width=21, font=('arial', 10))
         self.__speciesListBox[species].configure(justify=CENTER)
         self.__speciesListBox[species].pack(side = TOP)
+        
+        if theory == 'marcus': return
 
         self.__speciesEnEntry[species] = Entry(parent, width=25)
         self.__speciesEnEntry[species]["state"] = DISABLED
@@ -220,6 +242,7 @@ class Rate:
             self.__speciesEnVar[species] = BooleanVar()
         self.__TempVar['ctst'] = BooleanVar()
         self.__TempVar['vtst'] = BooleanVar()
+        self.__TempVar['marcus'] = BooleanVar()
 
     def __SetTemp(self,theory):
         state, bg, fg = [(NORMAL, 'white', 'black'), (DISABLED, 'gray95', 'gray')][self.__TempVar[theory].get()]
@@ -252,91 +275,73 @@ class Rate:
             #self.tab.focus_force()
             return False
 
-    def __Calculate(self):
+    def __Calculate(self,theory='ctst'):
+        #print(theory)
         a = reaction()
         a.setDefaultTemp()
-        self.__SpeciesPropBt['state'] = DISABLED
-        self.__ReacPropBt['state'] = DISABLED
-        self.__SolvPropBt['state'] = DISABLED
 
-        if not os.path.isfile(self.__speciesFilename['Reac1']) and not os.path.isfile(self.__speciesFilename['Reac2']):
-            messagebox.showerror(title="Error", message="Select at least one reactant")
-            #self.tab.focus_force()
-            return
+        if theory == 'ctst':
+            self.__SpeciesPropBt['state'] = DISABLED
+            self.__ReacPropBt['state'] = DISABLED
+            self.__SolvPropBt['state'] = DISABLED
 
-        if not os.path.isfile(self.__speciesFilename['TS']):
-            messagebox.showerror(title="Error", message="Select the Transition State file")
-            #self.tab.focus_force()
-            return
+        elif theory == 'marcus':
+            self.__ReacPropBt_marcus['state'] = DISABLED
+        
+        
+        ver = ['Reac1','TS'] if theory == 'ctst' else ['vReac1','pvert1']
+        #print(ver)
+        for v in ver:
+            if not os.path.isfile(self.__speciesFilename[v]):
+                messagebox.showerror(title="Error", message="Select the {} file".format(self.__species[v]))
+                #self.tab.focus_force()
+                return
 
-        if self.__TempVar['ctst'] == False:
-            if self.__TempCheck('ctst'):
-                a.setTemp(self.__T['ctst'])
-
+        
+        if self.__TempVar[theory] == False:
+            if self.__TempCheck(theory):
+                a.setTemp(self.__T[theory])
         self.__addSpecies(a)
 
-        a.run_reaction()
-        self.__SpeciesPropBt['state'] = ACTIVE
-        self.__ReacPropBt['state'] = ACTIVE
-        try:
-            a.Kramer()
-            self.__SolvPropBt['state'] = ACTIVE
-        except:
-            pass
-        try:
-            a.Smoluchowski()
-            self.__SolvPropBt['state'] = ACTIVE
-        except:
-            pass
+
+        if theory == 'ctst':
+            a.run_reaction()
+            self.__SpeciesPropBt['state'] = ACTIVE
+            self.__ReacPropBt['state'] = ACTIVE
+            try:
+                a.Kramer()
+                self.__SolvPropBt['state'] = ACTIVE
+            except:
+                pass
+            try:
+                a.Smoluchowski()
+                self.__SolvPropBt['state'] = ACTIVE
+            except:
+                pass
+        elif theory == 'marcus':
+            a.run_reaction_marcus()
+            self.__ReacPropBt_marcus['state'] = ACTIVE
 
         self.reaction = a
         messagebox.showinfo(title="Success!", message="Successful Calculation!")
 
     def __addSpecies(self,a):
-        if os.path.isfile(self.__speciesFilename['Reac1']):
-            a.add_reactant(self.__speciesFilename['Reac1'])
-            if self.__speciesEnVar['Reac1'].get():
+        reacs = ['Reac1', 'Reac2','vReac1', 'vReac2']
+        prods = ['Prod1', 'Prod2','vProd1', 'vProd2']
+        verts = ['pvert1', 'pvert2']
+
+        for specie in self.__speciesFilename:
+            if specie in reacs: a.add_reactant(self.__speciesFilename[specie])
+            elif specie in prods: a.add_product(self.__speciesFilename[specie])
+            elif specie in verts: a.add_vert(self.__speciesFilename[specie])
+            elif specie == 'TS': a.add_ts(self.__speciesFilename[specie])
+            if self.__speciesEnVar[specie].get():
                 try:
-                    En = float(self.__speciesEnEntry['Reac1'].get())
-                    a.setEnReac(En, -1)
+                    En = float(self.__speciesEnEntry[specie].get())
+                    if specie in reacs: a.setEnReac(En, -1)
+                    if specie in prods: a.setEnProd(En, -1)
                 except:
-                    messagebox.showwarning(title="Warning", message="The Reactant 1 energy was not set or is not a float.\nThe value was extracted from the file")
-        if os.path.isfile(self.__speciesFilename['Reac2']):
-            a.add_reactant(self.__speciesFilename['Reac2'])
-            if self.__speciesEnVar['Reac2'].get():
-                try:
-                    En = float(self.__speciesEnEntry['Reac2'].get())
-                    a.setEnReac(En, -1)
-                except:
-                    messagebox.showwarning(title="Warning",
-                                           message="The Reactant 2 energy was not set or is not a float.\nThe value was extracted from the file")
-        if os.path.isfile(self.__speciesFilename['TS']):
-            a.add_ts(self.__speciesFilename['TS'])
-            if self.__speciesEnVar['TS'].get():
-                try:
-                    En = float(self.__speciesEnEntry['TS'].get())
-                    a.setEnTS(En)
-                except:
-                    messagebox.showwarning(title="Warning",
-                                           message="The Transition State energy was not set or is not a float.\nThe value was extracted from the file")
-        if os.path.isfile(self.__speciesFilename['Prod1']):
-            a.add_product(self.__speciesFilename['Prod1'])
-            if self.__speciesEnVar['Prod1'].get():
-                try:
-                    En = float(self.__speciesEnEntry['Prod1'].get())
-                    a.setEnProd(En, -1)
-                except:
-                    messagebox.showwarning(title="Warning",
-                                           message="The Product 1 energy was not set or is not a float.\nThe value was extracted from the file")
-        if os.path.isfile(self.__speciesFilename['Prod2']):
-            a.add_product(self.__speciesFilename['Prod2'])
-            if self.__speciesEnVar['Prod2'].get():
-                try:
-                    En = float(self.__speciesEnEntry['Prod2'].get())
-                    a.setEnProd(En, -1)
-                except:
-                    messagebox.showwarning(title="Warning",
-                                           message="The Product 2 energy was not set or is not a float.\nThe value was extracted from the file")
+                    messagebox.showwarning(title="Warning", message="The {} energy was not set or is not a float.\nThe value was extracted from the file".format(self.__species[specie]))
 
     def __vtstCalculate(self):
         pass
@@ -356,8 +361,11 @@ class Rate:
 
         SpeciesProperties(a, True)
 
-    def __ReactionProperties(self):
-        ReactionProperties(self.reaction)
+    def __ReactionProperties(self, theory='ctst'):
+        if theory == 'ctst':
+            ReactionProperties(self.reaction)
+        else:
+            ReactionProperties(self.reaction,theory=theory)
 
     def __SpeciesProperties(self):
         SpeciesProperties(self.reaction,False)
@@ -603,7 +611,7 @@ class ReactionProperties:
                       'ln':'Ln(k)',
                       'log10':'Log10(k)'}
 
-    def __init__(self,reaction):
+    def __init__(self,reaction,theory='ctst'):
         parent = Toplevel()
         parent.focus_force()
         parent.title('Reaction Properties')
@@ -612,6 +620,23 @@ class ReactionProperties:
         parent.resizable(False, False)
         try:parent.wm_iconbitmap('transitivity.ico')
         except:pass
+        self.theory = theory
+        if theory == 'marcus':
+                self.AdictTheory = {
+                    'Marcus': ('Marcus Theory (MT)', 'kmarcus', "Lnkmarcus", "Logkmarcus", 'k (MT)', 'Lnk (MT)', 'Log10k (MT)', '1'),
+                }
+                self.dictTheory = {
+                    'MT': ('Marcus Theory (MT)', 'kmarcus', 'k (MT)'),
+                }
+                self.dictProperties = {
+                    'de': ('Reaction Energy (ΔE)', '1', "%.5f", ' kcal/mol'),
+                    'dh': ('Reaction Enthalpy (ΔH)', '1', "%.5f", ' kcal/mol'),
+                    'dg': ('Reaction Gibbs Energy (ΔG)', '1', "%.5f", ' kcal/mol'),
+                    'de_set': ('de_set (ΔE)', '1', "%.5f", ' kcal/mol'),
+                    'lambda': ('lambda (ΔE)', '1', "%.5f", ' kcal/mol'),
+                    'dg_set': ('dg_set (ΔE)', '1', "%.5f", ' kcal/mol'),
+                }
+
 
         self.reaction = reaction
         self.dictRateUnit = ({'uni':'1/s'},
@@ -655,7 +680,9 @@ class ReactionProperties:
             ('PES', self.__PES, 'black'),
             ('Clear', self.__Clear, 'red'),
             ('Save *txt file', self.__SaveAll, 'blue'),
-        ]
+        ] if self.theory == 'ctst' else [('Save *txt file', self.__SaveAll, 'blue')]
+
+            
 
         for bt, cmd, color in bt_list:
             event_bt = Button(parent, text=bt, command=cmd, fg=color, bd=3, width=10,font=('Arial',10))
@@ -747,8 +774,8 @@ class ReactionProperties:
                 self.save_file.writelines("{:^24}\t".format(value[2]))
             else:
                 self.save_file.writelines("{:>5}{:<19}\t".format(self.rateFormatVar.get(),value[2]))
-
-        self.save_file.writelines("{:^24}\t".format('Beta'))
+        if self.theory == 'ctst':
+            self.save_file.writelines("{:^24}\t".format('Beta'))
         self.save_file.writelines("\n\n")
         T = {'1000/T': self.reaction.Tinv1000,
              'T': self.reaction.T,
@@ -766,22 +793,23 @@ class ReactionProperties:
         k = {}
         for key, value in self.dictTheory.items():
             k[key] = self.reaction.reaction[value[1]]
-            print(type(k[key]))
+            #print(type(k[key]))
             if self.rateUnitVar.get() == 'molecule':
-                print(1)
+                #print(1)
                 k[key] = k[key] / 6.0221409E23
             if self.rateFormatVar.get() == 'ln':
-                print(2)
+                #print(2)
                 k[key] = np.log(k[key])
             if self.rateFormatVar.get() == 'log10':
-                print(3)
+                #print(3)
                 k[key] = np.log10(k[key])
 
         for i,j in enumerate(T):
             self.save_file.writelines('{:^10}\t\t'.format(str("%.4f" % j)))
             for key,value in self.dictTheory.items():
                 self.save_file.writelines("{:<24s}\t".format(str(fmt % k[key][i])))
-            self.save_file.writelines("{:<24s}\t".format(str("%.1f" %self.reaction.reaction['beta'][i])))
+            if self.theory == 'ctst':
+                self.save_file.writelines("{:<24s}\t".format(str("%.1f" %self.reaction.reaction['beta'][i])))
             self.save_file.writelines("\n")
 
 
@@ -909,8 +937,10 @@ class ReactionProperties:
             self.dictTheoryVar[value[1]] = BooleanVar()
 
         self.expPointsVar = BooleanVar()
-
-        self.dictTheoryVar['ktst'].set(True)
+        if self.theory == 'ctst':
+            self.dictTheoryVar['ktst'].set(True)
+        elif self.theory == 'marcus':
+            self.dictTheoryVar['kmarcus'].set(True)
 
     def __BuildframeLeft(self,parent):
 
@@ -928,7 +958,7 @@ class ReactionProperties:
         self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
         def on_key_press(event):
-            print("you pressed {}".format(event.key))
+            #print("you pressed {}".format(event.key))
             key_press_handler(event, self.canvas, toolbar)
 
         self.canvas.mpl_connect("key_press_event", on_key_press)
@@ -1489,7 +1519,7 @@ class SolventProperties:
         self.canvas.get_tk_widget().pack(side=TOP, fill=BOTH, expand=1)
 
         def on_key_press(event):
-            print("you pressed {}".format(event.key))
+            #print("you pressed {}".format(event.key))
             key_press_handler(event, self.canvas, toolbar)
         self.canvas.mpl_connect("key_press_event", on_key_press)
 
@@ -1683,8 +1713,9 @@ class SolventProperties:
 
 if __name__ == '__main__':
     root = Tk()
+    
+    
     #main = Rate(root)
-
     path = r"E:\GitHub\Transitivity\example\RateConstant\Bimolecular_Solvent"
     a = reaction()
     a.add_reactant(os.path.join(path, 'nh3_m062x.out'))
@@ -1695,8 +1726,20 @@ if __name__ == '__main__':
     a.run_reaction()
     a.Kramer()
     a.Smoluchowski()
-
+    
     ReactionProperties(a)
     SpeciesProperties(a,False)
     SolventProperties(a)
+    
+    path = r"E:\GitHub\Transitivity\example\RateConstant\marcus"
+    a = reaction()
+    a.add_reactant(os.path.join(path, 'aminophenol_react_m06.log'))
+    a.add_reactant(os.path.join(path, 'SO4-_radical.log'))
+    a.add_product(os.path.join(path, 'aminophenol_pro_m06.log'))
+    a.add_product(os.path.join(path, 'SO4-_2_productl.log'))
+    a.add_vert(os.path.join(path, 'aminophenol_vert_m06.log'))
+    a.add_vert(os.path.join(path, 'SO4-_2_vert.log'))
+    a.run_reaction_marcus()
+    ReactionProperties(a,theory='marcus')
+
     root.mainloop()

@@ -79,6 +79,7 @@ class reaction:
         self.ts = {}
         self.prod = []
         self.specie = {}
+        self.vert = []
 
         self.reaction = {}
 
@@ -134,7 +135,11 @@ class reaction:
         self.prod.append({})
         self.add_specie(filename,self.prod[-1])
 
-    def add_specie(self, filename, specie=None):
+    def add_vert(self,filename):
+        self.vert.append({})
+        self.add_specie(filename,self.vert[-1], True)
+
+    def add_specie(self, filename, specie=None, marcus=False):
         if specie == None:
             self.specie[os.path.splitext(os.path.basename(filename))[0]] = {}
             specie = self.specie[os.path.splitext(os.path.basename(filename))[0]]
@@ -144,11 +149,15 @@ class reaction:
         specie['filename'] = filename
         specie['basefilename'] = os.path.basename(filename)
         specie['rVol'] = 0.0
+        specie['SCF'] = 0.0
         ####################################################################################################################
         ############################## Extracting
 
         file = open(filename, 'r', encoding="utf-8")
         for ln in file:
+            if 'SCF Done:' in ln:
+                specie['SCF'] = float(ln.split()[4]) * 627.509
+                if marcus: return
             if "Deg. of freedom" in ln:
                 specie['DoF'] = int(ln.split()[3])
             if "NAtoms=" in ln:
@@ -189,6 +198,7 @@ class reaction:
                         specie['freqi'] = -float(ln[20:30]); errorts = 1
             if "a0 for SCRF calculation" in ln:
                 specie['rVol'] = float(ln.split()[6])
+
 
         file.close()
         ####################################################################################################################
@@ -354,6 +364,9 @@ class reaction:
     def sum_prod(self,prop):
         return  sum([self.prod[n][prop] for n in range(len(self.prod) ) ])
 
+    def sum_vert_scf(self):
+        return sum([self.vert[n]['SCF'] for n in range(len(self.vert))])
+
     def prod_reac(self,prop):
         prod = np.copy(self.reac[0][prop])
         for n in range(1, len(self.reac)):
@@ -378,7 +391,31 @@ class reaction:
                 for n in self.reaction:
                     print(n)
 
-    def run_reaction(self):
+    def run_reaction_marcus(self):
+        self.run_reaction(True)
+
+    def run_reaction(self, marcus=False):
+
+        self.reaction['de'] = self.sum_prod('En') - self.sum_reac('En')
+        self.reaction['dh'] = self.sum_prod('Ent') - self.sum_reac('Ent')
+        self.reaction['dg'] = self.sum_prod('EnG') - self.sum_reac('EnG')
+
+        if marcus:
+            self.reaction['de_set'] = self.sum_vert_scf() - self.sum_reac('SCF')
+            self.reaction['lambda'] = self.reaction['de_set'] - self.reaction['dg']
+            self.reaction['dg_set'] =  (self.reaction['lambda'] / 4) * (self.reaction['dg'] / self.reaction['lambda'] +1 )**2
+
+            
+            X1 = (self.kb * self.T / self.h)
+            X2 = (np.exp(-self.reaction['dg_set'] / (self.r * self.T)))
+
+            self.reaction['kmarcus'] = X1 * X2
+            self.reaction['Lnkmarcus']  = np.log(self.reaction['kmarcus'])
+            self.reaction['Logkmarcus'] = np.log10(self.reaction['kmarcus'])
+            return
+            
+
+
 
         self.reaction['freqi'] = self.ts['freqi']
 
@@ -388,10 +425,6 @@ class reaction:
         self.reaction['Ercal'] = self.reaction['Er'] * 1000  # cal
 
         self.reaction['H0'] = (self.ts['Ent'] - self.sum_reac('Ent') ) * 1000.0  # Cal
-
-        self.reaction['de'] = self.sum_prod('En') - self.sum_reac('En')
-        self.reaction['dh'] = self.sum_prod('Ent') - self.sum_reac('Ent')
-        self.reaction['dg'] = self.sum_prod('EnG') - self.sum_reac('EnG')
 
         self.reaction['Tc'] = (self.c * self.h * self.ts['freqi'] / (np.pi * self.kb))
 
@@ -406,6 +439,7 @@ class reaction:
 
         X1 = (self.kb * self.T / self.h)
         X2 = (np.exp(-self.reaction['Efcal'] / (self.r * self.T)))
+
         # --------------------- Cáclulo do Coeficiente de partição Total da reação p/ cada temperatura------------------------
 
         self.reaction['QTot'] = np.divide(self.ts['QTot'] , self.prod_reac('QTot'))

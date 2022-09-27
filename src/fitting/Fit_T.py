@@ -185,7 +185,7 @@ class Fit:
         plt.plot([(1000.0 / x) for x in Xexp], invEa, '--o')
         plt.title("Transitivity Plot")
         plt.xlabel('1000/T', fontsize='x-large')
-        plt.ylabel('Gamma (kcal/mol)', fontsize='x-large')
+        plt.ylabel('Gamma (mol/kcal)', fontsize='x-large')
         plt.show()
 
     def SG(self):
@@ -203,7 +203,7 @@ class Fit:
         plt.plot([(1000.0 / x) for x in Xexp], invEa, 'o')
         plt.title("Transitivity Plot")
         plt.xlabel('1000/T', fontsize='x-large')
-        plt.ylabel('Gamma (kcal/mol)', fontsize='x-large')
+        plt.ylabel('Gamma (mol/kcal)', fontsize='x-large')
         plt.show()
 
     def diff(self): 
@@ -237,7 +237,7 @@ class Fit:
         df = np.insert(df,0,(Yexp[1]  - Yexp[0]) /(mXexp[1] - mXexp[0]))
         df = np.insert(df,len(df),(Yexp[-1]  - Yexp[-2]) /(mXexp[-1] - mXexp[-2]))
         invEa = -1.0/df
-        print("XX",invEa,Xexp)
+        #print("XX",invEa,Xexp)
         return invEa, Xexp
  
     def anim_change(self):
@@ -332,8 +332,8 @@ class Fit:
         else:
             var_lock[1] = False
             nDimension = 2
-        print('FIT_T',X_0)
-        print(invEa)
+        #print('FIT_T',X_0)
+        #print(invEa)
         return invEa, Xexp, X_0, step_anim, qA, qT, qV, To, var_lock, NStopMax, animVar, theory, nDimension, F
 
     def Calc(self):

@@ -61,7 +61,7 @@ class gsa_py:
         ax = fig.add_subplot(121)
         ax.scatter([1000.0 / x for x in Xexp], invEa, label='Experimental')
         line1, = ax.plot([1000.0 / x for x in Xexp], invEa, label='Fitted', color='r')
-        ax.set(xlabel="1000/T", ylabel='Gamma')
+        ax.set(xlabel="1000/T", ylabel='Gamma (mol/kcal)')
         line2 = ''
 
         plt.legend(loc='best', shadow=False, fontsize='x-large')
@@ -83,7 +83,7 @@ class gsa_py:
         D, qA1, qT1, qV1, Tqt, coef, exp1, exp2 = self.GSAini(qA, qT, qV, To)
 
         func = self.func(theory, Xexp, invEa)                      #Definindo a função objetivo
-        print(X_0)
+        #print(X_0)
         #X_0[0] = np.log(X_0[0])                                     #O fator pré exponencial A será ajustado como ln(A)
         X_0 = np.array(X_0)
         X_ini = np.array(X_0)
@@ -121,9 +121,9 @@ class gsa_py:
                 if random.random() < PqA:
                     X_0 = X_t.copy()
                     func_0 = func_t
-        if anim == True:
+        if anim == True and "YFit" in self.__dict__:
             draw(self.YFit)
-        print(self.YFit)
+        #print(self.YFit)
 
     def VarLock(self,lock,X_ini):
         def VarLock(X_t):

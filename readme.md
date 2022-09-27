@@ -7,14 +7,14 @@ Procedures are made available to evaluate the phenomenology of the temperature d
 Reaction rate constants can be calculated by the traditional Transition-State Theory using a set of one-dimensional tunneling corrections (Bell (1935), Bell (1958), Skodje and Truhlar and, in particular, the deformed (d-TST) approach). To account for the solvent effect on reaction rate constant, implementation is given of the Kramers and of Collins–Kimball formulations.
 
 
-<img src="/doc/rate.gif?raw=true" align="center">
+<img src="/src/doc/rate.gif?raw=true" align="center">
 
 
-<img src="/doc/fit.gif?raw=true" align="center">
+<img src="/src/doc/fit.gif?raw=true" align="center">
 
 An input file generator is provided to run various molecular dynamics approaches in CPMD code. Examples are worked out and made available for testing. Images are displayed using GaussView of Gaussian.
 
-<img src="/doc/md.gif?raw=true" align="center">
+<img src="/src/doc/md.gif?raw=true" align="center">
 
 
 ### Dependencies

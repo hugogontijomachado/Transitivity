@@ -185,7 +185,7 @@ class Fit:
         plt.plot([(1000.0 / x) for x in Xexp], invEa, '--o')
         plt.title("Transitivity Plot")
         plt.xlabel('1000/T', fontsize='x-large')
-        plt.ylabel('Gama', fontsize='x-large')
+        plt.ylabel('Gamma (kcal/mol)', fontsize='x-large')
         plt.show()
 
     def SG(self):
@@ -203,7 +203,7 @@ class Fit:
         plt.plot([(1000.0 / x) for x in Xexp], invEa, 'o')
         plt.title("Transitivity Plot")
         plt.xlabel('1000/T', fontsize='x-large')
-        plt.ylabel('Gama', fontsize='x-large')
+        plt.ylabel('Gamma (kcal/mol)', fontsize='x-large')
         plt.show()
 
     def diff(self): 

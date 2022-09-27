@@ -1,6 +1,6 @@
-from converter import Converter
+from .converter import Converter
 import numpy as np
-import MD_module as MDM
+from . import MD_module as MDM
 import os
 import random
 #lastversion

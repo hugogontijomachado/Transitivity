@@ -3,8 +3,8 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
-import MD_module as MDM
-import MD_multiple as MDmult
+from . import MD_module as MDM
+from . import MD_multiple as MDmult
 import os
 from collections import Counter
 

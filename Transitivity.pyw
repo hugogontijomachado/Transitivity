@@ -3,9 +3,9 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import os
-import Rate
-import Fit
-import MD
+from src.rate import Rate
+from src.fitting import Fit
+from src.md import MD
 
 
 class Main(Tk):
@@ -14,7 +14,7 @@ class Main(Tk):
         self.title('Transitivity')
         self.geometry("1000x700+50+50")
         self.resizable(False, False)
-        try:self.wm_iconbitmap('transitivity.ico')
+        try:self.wm_iconbitmap(r'doc\transitivity.ico')
         except:pass
 
         menu = Menu(self)

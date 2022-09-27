@@ -3,8 +3,8 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 import os
-import Fit_A
-import Fit_T
+from . import Fit_A
+from . import Fit_T
 
 
 class Fit:

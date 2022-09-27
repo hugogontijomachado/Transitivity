@@ -2,30 +2,40 @@
 from tkinter import *
 from tkinter import filedialog
 import os
-import gsa_ArrheniusPlot as gsa_A
+from . import gsa_TransitivityPlot as gsa_T
 import math as mt
 from tkinter import messagebox
 import numpy as np
+from scipy import signal
+import matplotlib.pyplot as plt
 import time
 
 
 class Fit:
     def __init__(self,tab):
-
-        self.title = Label(tab, text="GSA Fitting", font=('arial', 30, 'bold'))
-        self.title.pack(pady=5)
         self.tab = tab
         self.font1 = ('arial', 14, 'bold')
         self.font3 = ('arial', 10)
 
 # Frames
-        self.frame0 = Frame(tab)
-        self.frame0.pack(side=TOP)
-        self.frame1 = Frame(tab)
-        self.frame1.pack(side=LEFT,padx=70)
-        self.frame2 = Frame(tab)
+
+        self.right = Frame(tab)
+        self.right.pack(side=RIGHT,padx=50)
+        self.lb1 = Label(self.right, text="GSA Fitting", font=('arial', 30, 'bold'))
+        self.lb1.pack()
+        self.frame0 = Frame(self.right)
+        self.frame0.pack()
+        self.frame1 = Frame(self.right)
+        self.frame1.pack()
+        self.left = Frame(tab)
+        self.left.pack(side=LEFT,padx=50)
+        self.frame2_0 = LabelFrame(self.left, bd=5)
+        self.frame2_0.pack(pady=10)
+        self.plotsg = Frame(self.frame2_0)
+        self.plotsg.pack(side=BOTTOM, anchor=CENTER)
+        self.frame2 = Frame(self.left)
         self.frame2.pack(side=LEFT)
-        self.frame3 = Frame(tab)
+        self.frame3 = Frame(self.left)
         self.frame3.pack(side=LEFT)
 
 
@@ -55,29 +65,8 @@ class Fit:
         self.frame121.pack(side=TOP,padx=padx,pady=5,anchor=W,expand=True)
         self.frame122 = Frame(self.frame12)
         self.frame122.pack(side=TOP,padx=padx,pady=5,anchor=W,expand=True)
-        self.frame123 = Frame(self.frame12)
-        self.frame123.pack(side=TOP,padx=padx,pady=5,anchor=W,expand=True)
-        self.frame124 = Frame(self.frame12)
-        self.frame124.pack(side=TOP,padx=padx,pady=5,anchor=W,expand=True)
         self.frame1anim = Frame(self.frame12)
         self.frame1anim.pack(side=TOP, padx=padx,pady=5,anchor=W,expand=True)
-        #self.frame124 = Frame(self.frame12)
-        #self.frame124.pack(side=TOP, padx=padx, pady=5, anchor=W)
-
-# Theories
-        theory_list = [
-            ('Arrhenius'),
-            ('Aquilanti-Mundim'),
-            ('NTS'),
-            ('VFT'),
-            ('ASCC'),
-        ]
-        self.theory = {}
-        self.theoryVar = StringVar()
-        for theory in theory_list:
-            self.theory[theory] = Radiobutton(self.frame0,text=theory, variable=self.theoryVar, value=theory,command=self.init_labels)
-            self.theory[theory].pack(side=LEFT)
-        self.theory['Aquilanti-Mundim'].select()
 
 
 # Buttons
@@ -90,19 +79,48 @@ class Fit:
 
         self.save_bt = Button(self.frame13, text='Save', command=self.Write,font = ('Arial', 12, 'bold'), width = 8, height = 1, bd = 5,fg='blue')
         self.save_bt.pack(side=RIGHT,pady=pady, padx=padx, anchor=CENTER)
+
+        self.SGVar = IntVar()
+        self.SG_ch = Checkbutton(self.frame2_0, text="Apply SG",variable=self.SGVar,onvalue=1, offvalue=0, font = ('Arial', 10, 'bold'))
+        self.SG_ch.pack(side=LEFT)
+        self.ed1 = Entry(self.frame2_0)
+        self.ed1.pack(side=LEFT,padx=10)
+        self.ed1.insert(1, '2')
+        self.order_lb = Label(self.frame2_0,text='Polynomial \nOrder')
+        self.order_lb.pack(side=LEFT)
+        
+        self.PlotSG_ch = Button(self.plotsg, text="Plot SG", command=self.PlotSG, font = ('Arial', 10, 'bold'))
+        self.PlotSG_ch.pack(side=RIGHT,padx=15)
+
+        self.preview_ch = Button(self.plotsg, text="Preview", command=self.preview, font = ('Arial', 10, 'bold'))
+        self.preview_ch.pack(side=LEFT,padx=15)
+
 # Text
         padx=3 ; pady=0
         self.label_l = Label(self.frame2,text='Temperature (K)',font=self.font3).pack()
         self.txt_l = Text(self.frame2,height=29,width=19)
         self.txt_l.pack(fill=BOTH, expand=True,pady=pady,padx=padx)
 
-        self.label_r = Label(self.frame3, text='Rate Constant',font=self.font3).pack()
+        self.label_r = Label(self.frame3, text='Rate Constante',font=self.font3).pack()
         self.txt_r = Text(self.frame3,height=29,width=20)
-        self.txt_r.pack(fill=BOTH, expand=True,side=LEFT,pady=pady,padx=padx)
+        self.txt_r.pack(fill=BOTH,expand=True,side=LEFT,pady=pady,padx=padx)
 
         self.scrollbar = Scrollbar(self.frame3)
         self.scrollbar.pack(side=RIGHT, fill=Y)
 
+#RadioButton
+        # Theories
+        theory_list = [
+            ('Arrhenius'),
+            ('Aquilanti-Mundim'),
+            ('VFT'),
+        ]
+        self.theory = {}
+        self.theoryVar = StringVar()
+        for theory in theory_list:
+            self.theory[theory] = Radiobutton(self.frame0,text=theory, variable=self.theoryVar, value=theory,command=self.init_labels)
+            self.theory[theory].pack(side=LEFT)
+        self.theory['Aquilanti-Mundim'].select()
 
 # Changing the settings to make the scrolling work
         self.scrollbar['command'] = self.on_scrollbar
@@ -132,8 +150,6 @@ class Fit:
         ed_list = [
             (1, self.frame121),
             (2, self.frame122),
-            (3, self.frame123),
-            (4, self.frame124)
         ]
         self.ed = {}
         self.cb = {}
@@ -162,6 +178,68 @@ class Fit:
         self.anim_lb.pack(side=LEFT)
         self.anim_change()
 
+
+    def preview(self):
+        invEa, Xexp= self.diff()
+        #print(invEa)
+        plt.plot([(1000.0 / x) for x in Xexp], invEa, '--o')
+        plt.title("Transitivity Plot")
+        plt.xlabel('1000/T', fontsize='x-large')
+        plt.ylabel('Gama', fontsize='x-large')
+        plt.show()
+
+    def SG(self):
+        invEa, Xexp= self.diff()
+        if self.SGVar.get() == 1:
+            order = int(self.ed1.get())
+            invEa = signal.savgol_filter(invEa, len(Xexp), order)
+        if self.SGVar.get() == 0:
+            invEa = invEa
+        return invEa, Xexp
+    
+    def PlotSG(self):
+        invEa, Xexp = self.SG()
+        #print(invEa)
+        plt.plot([(1000.0 / x) for x in Xexp], invEa, 'o')
+        plt.title("Transitivity Plot")
+        plt.xlabel('1000/T', fontsize='x-large')
+        plt.ylabel('Gama', fontsize='x-large')
+        plt.show()
+
+    def diff(self): 
+        
+        ### Temperature
+        temp = self.txt_l.get(0.0,END)
+        temp = temp.split('\n')
+        temp_corr=[]
+        for i in range(len(temp)):
+            try:temp_corr.append(float(temp[i]))
+            except:pass
+
+        ### Rate
+        rate = self.txt_r.get(0.0, END)
+        rate = rate.split('\n')
+        rate_corr = []
+        for i in range(len(rate)):
+            try:rate_corr.append(float(rate[i]))
+            except:pass
+
+        Xexp = temp_corr
+        mXexp = [ (1000.0 / x) for x in Xexp ]
+        Yexp = [ np.log(x) for x in rate_corr]
+        df = []
+        for i in range(1, len(mXexp)-1):
+            h = mXexp[i+1] - mXexp[i]
+            h_ = mXexp[i] - mXexp[i-1]
+            df.append(1/2*((Yexp[i+1]-Yexp[i])/h+(Yexp[i]-Yexp[i-1])/h_))
+        df = np.array(df)
+	    # End points
+        df = np.insert(df,0,(Yexp[1]  - Yexp[0]) /(mXexp[1] - mXexp[0]))
+        df = np.insert(df,len(df),(Yexp[-1]  - Yexp[-2]) /(mXexp[-1] - mXexp[-2]))
+        invEa = -1.0/df
+        print("XX",invEa,Xexp)
+        return invEa, Xexp
+ 
     def anim_change(self):
         if self.animVar.get(): value = 1
         else: value = 0
@@ -175,7 +253,7 @@ class Fit:
 
     def ImportFile(self):
         self.filename = filedialog.askopenfilename(title="Select file",
-                                              filetypes=[(".txt files", "*.txt;*.dat"), ("all files", "*.*")])
+                                              filetypes=[(".txt files", "*.txt;*.dat;*.csv"), ("all files", "*.*")])
         if not os.path.isfile(self.filename):
             return
         self.txt_l.delete(0.0, END)
@@ -205,7 +283,7 @@ class Fit:
         for i in range(len(dataset2)):
             self.txt_l.insert(float(i+1), str(dataset2[i][0]) + '\n')
             self.txt_r.insert(float(i+1),str(dataset2[i][1]) + '\n')
-
+            
     def Extract(self):
         ### GSA parameters
         try:
@@ -221,31 +299,16 @@ class Fit:
 
         ### Initial Parameters
         try:
-            X_0 = [float(self.ed[1].get()), float(self.ed[2].get()), float(self.ed[3].get()), float(self.ed[4].get())]
+            X_0 = [float(self.ed[1].get()), float(self.ed[2].get())]
         except:
             messagebox.showerror(title='Error', message='Invalid Initial parameters')
             return
 
-        ### Temperature
-        temp = self.txt_l.get(0.0,END)
-        temp = temp.split('\n')
-        temp_corr=[]
-        for i in range(len(temp)):
-            try:temp_corr.append(float(temp[i]))
-            except:pass
-
-        ### Rate
-        rate = self.txt_r.get(0.0, END)
-        rate = rate.split('\n')
-        rate_corr = []
-        for i in range(len(rate)):
-            try:rate_corr.append(float(rate[i]))
-            except:pass
-
-        if len(temp_corr) != len(rate_corr):
-            return
+        ### Diff
+        invEa, Xexp = self.SG()
 
         ### GSA initialization
+        #sgVar = self.SGVar.get()
         animVar = self.animVar.get()
         if animVar:
             try:
@@ -261,138 +324,89 @@ class Fit:
             var_lock.append(self.LockVar[i+1].get())
 
         theory = self.theoryVar.get()
-
+        #print(len(X_0))
         if theory == 'Arrhenius':
-            nDimension = 2
+            nDimension = 1
             del X_0[-1]
-
-            del X_0[-1]
-
-            var_lock[2] = False
-            var_lock[3] = False
-        elif theory == 'ASCC':
-            nDimension = 4
+            var_lock[0] = False
         else:
-            del X_0[-1]
-            var_lock[3] = False
-            nDimension = 3
-
-        return temp_corr, rate_corr, X_0, step_anim, qA, qT, qV, To, var_lock, NStopMax, animVar, theory, nDimension, F
+            var_lock[1] = False
+            nDimension = 2
+        print('FIT_T',X_0)
+        print(invEa)
+        return invEa, Xexp, X_0, step_anim, qA, qT, qV, To, var_lock, NStopMax, animVar, theory, nDimension, F
 
     def Calc(self):
-        temp_corr, rate_corr, X_0, step_anim, qA, qT, qV, To, var_lock, NStopMax, animVar, theory, nDimension, F = self.Extract()
-        #temp_corr = [100,200,300]
-        #rate_corr = [3,2,1]
-        if len(temp_corr) != len(rate_corr):
+        invEa, Xexp, X_0, step_anim, qA, qT, qV, To, var_lock, NStopMax, animVar, theory, nDimension, F = self.Extract()
+        if len(invEa) != len(Xexp):
             messagebox.showerror(title='Error', message='Difference in the number of points between k and T ')
             return
-        if len(temp_corr) == 0 or len(rate_corr) == 0:
+        if len(invEa) == 0 or len(Xexp) == 0:
             messagebox.showerror(title='Error', message='Enter the values of k and T ')
             return
 
-
-
-        a = gsa_A.gsa_py()
-        a.gsa(temp_corr,rate_corr,nDimension,theory,X_0,var_lock,animVar,step_anim,NStopMax,qA,qT,qV,To,F)
-
+        a = gsa_T.gsa_py()
+        a.gsa(Xexp,invEa,nDimension,theory,X_0,var_lock,animVar,step_anim,NStopMax,qA,qT,qV,To,F)
         self.a = a
-        #print('Tempo de cálculo: ', time.time() - inicio)
-
         self.write_parameters()
 
     def write_parameters(self):
         a = self.a
         self.ed[1].delete(0,END)
-        self.ed[1].insert(1, str(np.exp(a.X_Min[0])))
-        self.ed[2].delete(0, END)
-        self.ed[2].insert(1, str(a.X_Min[1]))
+        self.ed[1].insert(1, str(a.X_Min[0]))
         if self.theoryVar.get() != 'Arrhenius':
-            self.ed[3].delete(0, END)
-            self.ed[3].insert(1, str(a.X_Min[2]))
-        if self.theoryVar.get() == 'ASCC':
-            self.ed[4].delete(0, END)
-            self.ed[4].insert(1, str(a.X_Min[3]))
+            self.ed[2].delete(0, END)
+            self.ed[2].insert(1, str(a.X_Min[1]))
         self.ChiSq['text'] = ' Chi-square: ' + str(a.func_Min)
-
     def init_labels(self):
         theory_dict = {
-            'Arrhenius':('A','Eo','',''),
-            'Aquilanti-Mundim':('A','Eo','d',''),
-            'NTS':('A','Eo','To',''),
-            'VFT':('A','B','To',''),
-            'ASCC':('A','Eo','Ev','d')
+            'Arrhenius':('Ea',''),
+            'Aquilanti-Mundim':('Ea','d'),
+            'VFT':('B','T0'),
         }
         if self.theoryVar.get() == 'Arrhenius':
-            self.ed[3]['state'] = 'disabled'
-            self.cb[3]['state'] = 'disabled'
-        else:
-            self.ed[3]['state'] = 'normal'
-            self.cb[3]['state'] = 'normal'
+            self.ed[2]['state'] = 'disabled'
+            self.cb[2]['state'] = 'disabled'
 
-        if self.theoryVar.get() != 'ASCC':
-            self.ed[4]['state'] = 'disabled'
-            self.cb[4]['state'] = 'disabled'
         else:
-            self.ed[4]['state'] = 'normal'
-            self.cb[4]['state'] = 'normal'
+            self.ed[2]['state'] = 'normal'
+            self.cb[2]['state'] = 'normal'
 
         for theory in theory_dict:
             if self.theoryVar.get() == theory:
                 self.lb_init[1]['text'] = "{:<6s}".format(theory_dict[theory][0])
                 self.lb_init[2]['text'] = "{:<6s}".format(theory_dict[theory][1])
-                self.lb_init[3]['text'] = "{:<6s}".format(theory_dict[theory][2])
-                self.lb_init[4]['text'] = "{:<6s}".format(theory_dict[theory][3])
                 return
 
     def Write(self):
-
+        a = self.a
+        
         filename = filedialog.asksaveasfilename(title="Save File",defaultextension='txt',filetypes=(("txt files", "*.txt"), ("dat files", "*.dat"), ("all files", "*.*")))
-
         out = open(filename, 'w', encoding="utf-8")
 
         fmt1 = '%20s'
         fmt2 = '%.15f'
 
-        out.writelines(fmt1 % 'T(K)' + '\t' + fmt1 % '1000/T' + '\t' + fmt1 % 'k-exp' + '\t' + fmt1 % 'ln(k) - exp' + '\t' + fmt1 % 'ln(k) - Fit\n')
-        for i in range(len(self.a.X)):
-            out.writelines(fmt1 % str(fmt2%self.a.X[i]) + '\t' + fmt1 % str(fmt2%(1000.0/self.a.X[i])) + '\t' + fmt1 % str(fmt2%self.a.Y[i]) + '\t' + fmt1 % str(fmt2%self.a.lnY[i]) + '\t' + fmt1 % str(fmt2%self.a.YFit[i])+'\n')
-        out.writelines(' Chi-square: ' + str(self.a.func_Min) + '\n\n')
+        out.writelines(fmt1 % '1000/T' + '\t' + fmt1 % 'Gamma-exp' + '\t' + fmt1 % 'Gamma - Fit\n')
+        for i in range(len(a.Xexp)):
+            out.writelines(fmt1 % str(fmt2%(1000.0/a.Xexp[i])) + '\t' + fmt1 % str(fmt2%(a.invEa[i])) + '\t' + fmt1 % str(fmt2%(a.YFit[i]))+'\n')
+        out.writelines(' Chi-square: ' + str(a.func_Min) + '\n\n')
 
         if self.theoryVar.get() == 'Arrhenius':
-            out.writelines(' A= ' + str(np.exp(self.a.X_Min[0])) + '\n')
-            out.writelines(' Eo(cal/mol)= ' + str(self.a.X_Min[1]) + '\n\n')
-            out.writelines(' k = A*exp(-Eo/(R*T))\n')
-            out.writelines(' ln(k) = ln(A)-(Eo/(R*T))\n')
+            out.writelines(' E= ' + str((a.X_Min[0])) + '\n')
+            out.writelines(' Gamma = 1/E\n')
 
         elif self.theoryVar.get() == 'Aquilanti-Mundim':
-            out.writelines(' A= ' + str(np.exp(self.a.X_Min[0])) + '\n')
-            out.writelines(' Eo(cal/mol)= ' + str(self.a.X_Min[1]) + '\n')
-            out.writelines(' d= ' + str(self.a.X_Min[2]) + '\n\n')
-            out.writelines(' k = A*(1-((d*Eo)/(R*T)))^(1/d)\n')
-            out.writelines(' ln(k) = ln(A)+(1/d)*ln(1-((d*Eo)/(R*T)))\n')
-
-        elif self.theoryVar.get() == 'NTS':
-            out.writelines(' A= ' + str(np.exp(self.a.X_Min[0])) + '\n')
-            out.writelines(' Eo(cal/mol)= ' + str(self.a.X_Min[1]) + '\n')
-            out.writelines(' To(K)= ' + str(self.a.X_Min[2]) + '\n\n')
-            out.writelines(' k = A*exp(1-(Eo/(R*((T^2-T0^2)^(1/2))))) \n')
-            out.writelines(' ln(k) = ln(A)-(Eo/(R*((T^2-T0^2)^(1/2))))\n')
+            out.writelines(' E= ' + str((a.X_Min[0])) + '\n')
+            out.writelines(' d= ' + str(a.X_Min[1]) + '\n\n')
+            out.writelines(' Gamma = (1/E) * (1 - d * E * Beta)\n')
 
         elif self.theoryVar.get() == 'VFT':
-            out.writelines(' A= ' + str(np.exp(self.a.X_Min[0])) + '\n')
-            out.writelines(' B(cal*mol)= ' + str(self.a.X_Min[1]) + '\n')
-            out.writelines(' T0(K)= ' + str(self.a.X_Min[2]) + '\n\n')
-            out.writelines(' k = A*exp(B/(T-T0)) \n')
-            out.writelines(' ln(k) = ln(A)+(B/(T-T0))\n')
-
-        elif self.theoryVar.get() == 'ASCC':
-            out.writelines(' A= ' + str(np.exp(self.a.X_Min[0])) + '\n')
-            out.writelines(' Eo(cal/mol)= ' + str(self.a.X_Min[1]) + '\n')
-            out.writelines(' Ev(cal/mol)= ' + str(self.a.X_Min[2]) + '\n\n')
-            out.writelines(' k = A*(1-d*Eo/(R*T+Ev))^(1/d) \n')
-            out.writelines(' ln(k) = ln(A)+(ln(1-(d*Eo/(r*T(i)+Ev)))/d)\n')
-            out.writelines(' d=(-1/3)*(Ev/(2*Eo))^2\n')
+            out.writelines(' E= ' + str((a.X_Min[0])) + '\n')
+            out.writelines(' d= ' + str(a.X_Min[1]) + '\n\n')
+            out.writelines(' Gamma = (1/E) * (1 - d * E * Beta)^2\n')
         out.close()
+
 
     def on_scrollbar(self, *args):
         self.txt_l.yview(*args)
@@ -401,6 +415,7 @@ class Fit:
     def on_textscroll(self, *args):
         self.scrollbar.set(*args)
         self.on_scrollbar('moveto', args[0])
+
 '''
 if __name__ == '__main__':
     root = Tk()

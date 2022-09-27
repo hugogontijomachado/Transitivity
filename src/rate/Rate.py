@@ -6,7 +6,7 @@ from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 import os
 import numpy as np
-from RateLib import reaction, Title
+from .RateLib import reaction, Title
 import matplotlib.pyplot as plt
 import matplotlib
 

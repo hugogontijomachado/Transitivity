@@ -6,6 +6,7 @@ from datetime import datetime
 import os
 np.seterr(invalid='ignore')
 sc.seterr(all='ignore')
+
 def Title():
     title = [
 '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n',
@@ -154,14 +155,26 @@ class reaction:
         ############################## Extracting
 
         file = open(filename, 'r', encoding="utf-8")
+        stop_natoms = False
         for ln in file:
             if 'SCF Done:' in ln:
                 specie['SCF'] = float(ln.split()[4]) * 627.509
                 if marcus: return
             if "Deg. of freedom" in ln:
                 specie['DoF'] = int(ln.split()[3])
-            if "NAtoms=" in ln:
-                specie['NAtoms'] = int(ln.split()[1])
+            # if "NAtoms=" in ln:
+            #     specie['NAtoms'] = int(ln.split()[1])
+            if "Charge =" in ln and "Multiplicity =" in ln and not stop_natoms:
+                natoms = 0
+                line = file.readline()
+                while line.strip() != '':
+                    natoms += 1
+                    line = file.readline()
+                specie['NAtoms'] = natoms
+                stop_natoms = True
+                print(filename)
+                print("NAtoms = ", specie['NAtoms'])
+                print('\n')
             if "Kelvin.  Pressure" in ln:
                 specie['P'] = float(ln.split()[4]) * 101325
             if "Molecular mass:" in ln:
@@ -423,8 +436,12 @@ class reaction:
         self.reaction['Efcal'] = self.reaction['Ef'] * 1000  # cal
         self.reaction['Er'] = self.ts['En'] - self.sum_prod('En')  # kcal
         self.reaction['Ercal'] = self.reaction['Er'] * 1000  # cal
-
-        self.reaction['H0'] = (self.ts['Ent'] - self.sum_reac('Ent') ) * 1000.0  # Cal
+        
+        self.reaction['H0'] = (self.ts['Ent'] - self.sum_reac('Ent') ) # kcal
+        self.reaction['H0cal'] = (self.ts['Ent'] - self.sum_reac('Ent') ) * 1000.0  # Cal
+        
+        self.reaction['G0'] = (self.ts['EnG'] - self.sum_reac('EnG') ) # kcal
+        self.reaction['G0cal'] = (self.ts['EnG'] - self.sum_reac('EnG') ) * 1000.0  # Cal
 
         self.reaction['Tc'] = (self.c * self.h * self.ts['freqi'] / (np.pi * self.kb))
 

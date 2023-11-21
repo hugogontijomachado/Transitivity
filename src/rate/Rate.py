@@ -590,9 +590,12 @@ class ReactionProperties:
         'ST': ('Skodje and Truhlar (ST)', 'kST',  'k (ST)'),
         'Bell35': ('Bell 35', 'kbell35', 'k (Bell35)'),
         'Bell58': ('Bell 58', 'kbell58', 'k (Bell58)'),
-        'Bell2T': ('Bell 582T','kbell2T', 'k (Bell582t)')}
+        'Bell2T': ('Bell 582T','kbell2T', 'k (Bell582t)')
+    }
     dictProperties = {
-        'Ef': ('Barrier Heigth (Eo)', '2', "%.5f", ' kcal/mol'),
+        'Ef': ('Barrier Heigth Energy (Eo)', '2', "%.5f", ' kcal/mol'),
+        'H0': ('Barrier Heigth Entalpy (Ho)', '2', "%.5f", ' kcal/mol'),
+        'G0': ('Barrier Heigth Gibbs Energy (Go)', '2', "%.5f", ' kcal/mol'),
         'de': ('Reaction Energy (ΔE)', '1', "%.5f", ' kcal/mol'),
         'dh': ('Reaction Enthalpy (ΔH)', '1', "%.5f", ' kcal/mol'),
         'dg': ('Reaction Gibbs Energy (ΔG)', '1', "%.5f", ' kcal/mol'),
@@ -676,52 +679,86 @@ class ReactionProperties:
         self.__BuildframeButtons(frameRightBottom)
 
     def __BuildframeButtons(self,parent):
+        
+        if self.theory != 'ctst':
+            bt, cmd, color = ('Save *txt file', self.__SaveAll, 'blue')
+            event_bt = Button(parent, text=bt, command=cmd, fg=color, bd=3, width=10,font=('Arial',10))
+            event_bt.pack(pady=6,expand=True, fill=X,side = TOP)
+            return
+        
+        
+        frame_left = Frame(parent)
+        frame_left.pack(expand=True, fill=BOTH,side=LEFT, padx=5)
+        
+        frame_right = Frame(parent)
+        frame_right.pack(expand=True, fill=BOTH,side=RIGHT, padx=5)
+
+        ## Frame Left        
+        pes_bt_list = [
+            ('PES (E)', self.__PES('En'), 'black'),
+            ('PES (H)', self.__PES('Ent'), 'black'),
+            ('PES (G)', self.__PES('EnG'), 'black'),
+        ]
+        
+        for bt, cmd, color in pes_bt_list:
+            event_bt = Button(frame_left, text=bt, command=cmd, fg=color, bd=3, width=10,font=('Arial',10))
+            event_bt.pack(pady=6,expand=True, fill=X,side = TOP)  #
+        
+        
+        ## Frame Right
         bt_list = [
-            ('PES', self.__PES, 'black'),
             ('Clear', self.__Clear, 'red'),
             ('Save *txt file', self.__SaveAll, 'blue'),
-        ] if self.theory == 'ctst' else [('Save *txt file', self.__SaveAll, 'blue')]
-
-            
-
+        ] 
+        
         for bt, cmd, color in bt_list:
-            event_bt = Button(parent, text=bt, command=cmd, fg=color, bd=3, width=10,font=('Arial',10))
+            event_bt = Button(frame_right, text=bt, command=cmd, fg=color, bd=3, width=10,font=('Arial',10))
             event_bt.pack(pady=6,expand=True, fill=X,side = TOP)  #
 
-    def __PES(self):
-        E = np.array([self.reaction.sum_reac('En'), self.reaction.ts['En'],self.reaction.sum_prod('En')])
-        E = E - min(E)
-        dif = max(E) - min(E)
-        label = ['R', 'TS', 'P']
-        color_plot = 'black'
-        color_marker = 'black'
-        x_label = 'Reaction Coordinate'
-        y_label = 'Energy (kcal/mol)'
-        ipadx = 0.3
-        ipady = 0.1 * dif
-        marker_size = 600
-        marker_space = 0.1
-        font_type = 'arial'
-        font_color = 'black'
-        font_weight = 'normal'
-        font_size = 12
+    def __PES(self, energy_type):
+        
+        y_label = {
+            "En": 'Energy (kcal/mol)',
+            "Ent": 'Entalpy (kcal/mol)',
+            "EnG": 'Gibbs Energy (kcal/mol)'
+            }[energy_type]
 
-        fig = plt.figure()
-        ax = fig.add_subplot(111)
+        
+        def gen_PES():
+            E = np.array([self.reaction.sum_reac(energy_type), self.reaction.ts[energy_type],self.reaction.sum_prod(energy_type)])
+            E = E - min(E)
+            dif = max(E) - min(E)
+            label = ['R', 'TS', 'P']
+            color_plot = 'black'
+            color_marker = 'black'
+            x_label = 'Reaction Coordinate'
+            ipadx = 0.3
+            ipady = 0.1 * dif
+            marker_size = 600
+            marker_space = 0.1
+            font_type = 'arial'
+            font_color = 'black'
+            font_weight = 'normal'
+            font_size = 12
 
-        for i in range(1, len(E)):
-            plt.plot([i + marker_space, i + 1 - marker_space], [E[i - 1], E[i]], linestyle=':', color=color_plot)
-        plt.scatter(range(1, len(E) + 1), E, s=marker_size, c=color_marker, marker='_')
-        for i in range(len(label)):
-            plt.text(i + 1, E[i] + (0.03 * dif), label[i], horizontalalignment='center', verticalalignment='center',
-                     fontdict={'family': font_type, 'color': font_color, 'weight': font_weight, 'size': font_size})
-        # ax.set_title(title, fontsize='x-large')
-        ax.set_xlabel(x_label, fontsize='x-large', labelpad=12)
-        ax.set_ylabel(y_label, fontsize='x-large', labelpad=10)
-        plt.xticks([])
-        plt.axis([1 - ipadx, 3 + ipadx, min(E) - ipady, max(E) + ipady])
-        plt.show()
-        plt.close()
+            fig = plt.figure()
+            ax = fig.add_subplot(111)
+
+            for i in range(1, len(E)):
+                plt.plot([i + marker_space, i + 1 - marker_space], [E[i - 1], E[i]], linestyle=':', color=color_plot)
+            plt.scatter(range(1, len(E) + 1), E, s=marker_size, c=color_marker, marker='_')
+            for i in range(len(label)):
+                plt.text(i + 1, E[i] + (0.03 * dif), label[i], horizontalalignment='center', verticalalignment='center',
+                         fontdict={'family': font_type, 'color': font_color, 'weight': font_weight, 'size': font_size})
+            # ax.set_title(title, fontsize='x-large')
+            ax.set_xlabel(x_label, fontsize='x-large', labelpad=12)
+            ax.set_ylabel(y_label, fontsize='x-large', labelpad=10)
+            plt.xticks([])
+            plt.axis([1 - ipadx, 3 + ipadx, min(E) - ipady, max(E) + ipady])
+            plt.show()
+            plt.close()
+
+        return gen_PES
 
     def __Clear(self):
         self.rateUnitVar.set(('uni', 'mol')[len(self.reaction.reac) - 1])
@@ -829,7 +866,23 @@ class ReactionProperties:
 
         for key, value in self.dictProperties.items():
             #print(item)
-            listbox.insert(END, value[0],value[2] % self.reaction.reaction[key] + value[3], "\n\n")
+            
+            # listbox.insert(END, value[0],value[2] % self.reaction.reaction[key] + value[3], "\n\n")
+            
+            if value[3].endswith('kcal/mol'):
+                listbox.insert(
+                    END,
+                    value[0],
+                    value[2] % self.reaction.reaction[key] + value[3],
+                )
+                kj_value = self.reaction.reaction[key]*4.184
+                listbox.insert(END, value[2] % kj_value + ' kJ/mol', "\n\n")
+            else:
+                listbox.insert(END, value[0],value[2] % self.reaction.reaction[key] + value[3], "\n\n")
+            
+                
+                
+                
 
     def __buildMenu(self,parent):
         menubar = Menu(parent)

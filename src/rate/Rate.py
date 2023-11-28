@@ -784,12 +784,18 @@ class ReactionProperties:
 
         self.save_file.writelines(Title())
 
-        if len(self.reaction.reac) == 1:
-            self.save_file.writelines("# REACTION:  " + os.path.basename(self.reaction.reac[0]['filename']).split('.')[0] + "  --->  " +
-                         os.path.basename(self.reaction.prod[0]['filename']).split('.')[0] + "\n\n" )
-        else:
-            self.save_file.writelines("# REACTION:  " + os.path.basename(self.reaction.reac[0]['filename']).split('.')[0] + ' + ' + os.path.basename(self.reaction.reac[1]['filename']).split('.')[0] + "  --->  " +
-                                      os.path.basename(self.reaction.prod[0]['filename']).split('.')[0] + ' + ' +os.path.basename(self.reaction.prod[1]['filename']).split('.')[0] + "\n\n" )
+        if len(self.reaction.reac) == 1 and len(self.reaction.prod) == 1:
+            self.save_file.writelines("# REACTION:  " + os.path.basename(self.reaction.reac[0]['filename']).split('.')[0] + "  --->  " + os.path.basename(self.reaction.prod[0]['filename']).split('.')[0] + "\n\n" )
+
+        elif len(self.reaction.reac) == 2 and len(self.reaction.prod) == 1:
+            self.save_file.writelines("# REACTION:  " + os.path.basename(self.reaction.reac[0]['filename']).split('.')[0] + ' + ' + os.path.basename(self.reaction.reac[1]['filename']).split('.')[0] + "  --->  " + os.path.basename(self.reaction.prod[0]['filename']).split('.')[0] + "\n\n" )
+        
+        elif len(self.reaction.reac) == 1 and len(self.reaction.prod) == 2:
+            self.save_file.writelines("# REACTION:  " + os.path.basename(self.reaction.reac[0]['filename']).split('.')[0] + "  --->  " + os.path.basename(self.reaction.prod[0]['filename']).split('.')[0] + ' + ' +os.path.basename(self.reaction.prod[1]['filename']).split('.')[0] + "\n\n" )        
+
+
+        elif len(self.reaction.reac) == 2 and len(self.reaction.prod) == 1:
+            self.save_file.writelines("# REACTION:  " + os.path.basename(self.reaction.reac[0]['filename']).split('.')[0] + ' + ' + os.path.basename(self.reaction.reac[1]['filename']).split('.')[0] + "  --->  " + os.path.basename(self.reaction.prod[0]['filename']).split('.')[0] + ' + ' +os.path.basename(self.reaction.prod[1]['filename']).split('.')[0] + "\n\n" )
                
         self.save_file.writelines('Reactional properties in kcal/mol \n')
 

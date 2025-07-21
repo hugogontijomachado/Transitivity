@@ -6,6 +6,8 @@ Transitivity is a free open-source code compatible with Windows, Linux and macOS
 Procedures are made available to evaluate the phenomenology of the temperature dependence of rate constants for processes from the Arrhenius and Transitivity plots.
 Reaction rate constants can be calculated by the traditional Transition-State Theory using a set of one-dimensional tunneling corrections (Bell (1935), Bell (1958), Skodje and Truhlar and, in particular, the deformed (d-TST) approach). To account for the solvent effect on reaction rate constant, implementation is given of the Kramers and of Collins–Kimball formulations.
 
+I am learning you
+
 
 <img src="/doc/rate.gif?raw=true" align="center">
 

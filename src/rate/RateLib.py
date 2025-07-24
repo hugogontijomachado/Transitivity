@@ -296,7 +296,7 @@ class reaction:
             specie['Qv'] = []
             for j in range(len(self.T)):
                 vibT = [-Tvib for Tvib in specie['Tvib']]
-                specie['Qv'].append(1.0 / (np.product(1 - np.exp(np.divide(vibT, self.T[j])))))
+                specie['Qv'].append(1.0 / (np.prod(1 - np.exp(np.divide(vibT, self.T[j])))))
             specie['Qv'] = np.array(specie['Qv'], dtype=np.float64)
         # ----------------------------- Calculo Q Translacional---------------------------------------------------------------
         specie['Qt'] = (((2.0 * np.pi * specie['masskg'] * self.kb * self.T) / (self.h ** 2.0)) ** 1.50) * ((self.kb * self.T) / specie['P'])
@@ -307,7 +307,7 @@ class reaction:
             specie['Qr'] = self.T / (specie['NSym'] * specie['Trot'][0])
         elif specie['DoF'] > 1:
             specie['Qr'] = ((np.pi ** 0.5) / specie['NSym']) * (
-                        (self.T ** 1.5) / (np.product(specie['Trot'][:])) ** 0.5)
+                        (self.T ** 1.5) / (np.prod(specie['Trot'][:])) ** 0.5)
         # ----------------------------- Calculo Qp Total------------------------------------------------------------------
         specie['QTot'] = specie['Qt'] * specie['Qr'] * specie['Qv'] * specie['Qe']
 

@@ -1018,7 +1018,7 @@ class ReactionProperties:
 
         def on_key_press(event):
             #print("you pressed {}".format(event.key))
-            key_press_handler(event, self.canvas, toolbar)
+            key_press_handler(event, self.canvas, self.toolbar)
 
         self.canvas.mpl_connect("key_press_event", on_key_press)
 

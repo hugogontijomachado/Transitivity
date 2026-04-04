@@ -306,8 +306,7 @@ class reaction:
         elif specie['DoF'] == 1:
             specie['Qr'] = self.T / (specie['NSym'] * specie['Trot'][0])
         elif specie['DoF'] > 1:
-            specie['Qr'] = ((np.pi ** 0.5) / specie['NSym']) * (
-                        (self.T ** 1.5) / (np.prod(specie['Trot'][:])) ** 0.5)
+            specie['Qr'] = ((np.pi ** 0.5) / specie['NSym']) * ((self.T ** 1.5) / (np.prod(specie['Trot'][:])) ** 0.5)
         # ----------------------------- Calculo Qp Total------------------------------------------------------------------
         specie['QTot'] = specie['Qt'] * specie['Qr'] * specie['Qv'] * specie['Qe']
 
@@ -371,7 +370,7 @@ class reaction:
                 for n in self.ts:
                     print(n)
 
-    def sum_reac(self,prop):
+    def sum_reac(self, prop):
         return  sum([self.reac[n][prop] for n in range(len(self.reac) ) ])
 
     def sum_prod(self,prop):
@@ -465,7 +464,7 @@ class reaction:
         if len(self.reac) == 1:
             self.reaction['ktst'] = X1 * self.reaction['QTot'] * X2
         else:
-            self.reaction['ktst'] = self.m2c * X1 * self.reaction['QTot'] * X2
+            self.reaction['ktst'] = X1 * self.reaction['QTot'] * X2 * self.m2c * ((self.rJ * self.T) / self.ts['P'])
 
         self.reaction['Lnktst']  = np.log(self.reaction['ktst'])
         self.reaction['Logktst'] = np.log10(self.reaction['ktst'])
@@ -474,7 +473,7 @@ class reaction:
         if len(self.reac) == 1:
             self.reaction['kdtst'] = X1 * self.reaction['QTot'] * np.exp(self.reaction['di'] * np.log(1 - self.reaction['d'] * self.reaction['Efcal'] / (self.r * self.T)))
         else:
-            self.reaction['kdtst'] = self.m2c * X1 * self.reaction['QTot'] * np.exp(self.reaction['di'] * np.log(1 - self.reaction['d'] * self.reaction['Efcal'] / (self.r * self.T)))
+            self.reaction['kdtst'] = self.m2c * ((self.rJ * self.T) / self.ts['P']) * X1 * self.reaction['QTot'] * np.exp(self.reaction['di'] * np.log(1 - self.reaction['d'] * self.reaction['Efcal'] / (self.r * self.T)))
 
         self.reaction['Lnkdtst']  = np.log(self.reaction['kdtst'])
         self.reaction['Logkdtst'] = np.log10(self.reaction['kdtst'])
